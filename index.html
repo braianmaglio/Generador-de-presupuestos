@@ -57,14 +57,45 @@
         direccion: ''
       });
 
-      const [preciosManoObra, setPreciosManoObra] = useState([
+      const preciosIniciales = [
         { id: 1, nombre: 'Cableado residencial', precio: 5000 },
         { id: 2, nombre: 'Instalación toma corriente', precio: 3000 },
         { id: 3, nombre: 'Instalación interruptor', precio: 2500 },
         { id: 4, nombre: 'Instalación luminaria', precio: 3500 },
         { id: 5, nombre: 'Tablero eléctrico', precio: 15000 },
         { id: 6, nombre: 'Puesta a tierra', precio: 8000 },
-      ]);
+      ];
+
+      const [preciosManoObra, setPreciosManoObra] = useState(preciosIniciales);
+      const [cargandoDatos, setCargandoDatos] = useState(true);
+
+      // Cargar precios guardados al iniciar
+      React.useEffect(() => {
+        const cargarPrecios = () => {
+          try {
+            const preciosGuardados = localStorage.getItem('precios-mano-obra');
+            if (preciosGuardados) {
+              setPreciosManoObra(JSON.parse(preciosGuardados));
+            }
+          } catch (error) {
+            console.log('No hay precios guardados, usando valores por defecto');
+          } finally {
+            setCargandoDatos(false);
+          }
+        };
+        cargarPrecios();
+      }, []);
+
+      // Guardar precios automáticamente cuando cambien
+      React.useEffect(() => {
+        if (!cargandoDatos) {
+          try {
+            localStorage.setItem('precios-mano-obra', JSON.stringify(preciosManoObra));
+          } catch (error) {
+            console.error('Error al guardar precios:', error);
+          }
+        }
+      }, [preciosManoObra, cargandoDatos]);
 
       const [datosCliente, setDatosCliente] = useState({
         nombre: '', telefono: '', direccion: '', email: ''
@@ -181,7 +212,7 @@
             * { margin: 0; padding: 0; box-sizing: border-box; }
             body { font-family: Arial, sans-serif; padding: 40px; color: #333; }
             .header { display: flex; justify-content: space-between; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 3px solid #ffd43c; }
-            .logo-section img { max-width: 200px; object-fit: contain; }
+            .logo-section img { max-width: 200px; max-height: 80px; object-fit: contain; }
             .empresa-datos { font-size: 12px; color: #666; line-height: 1.6; margin-top: 10px; }
             .presupuesto-info { text-align: right; }
             .presupuesto-numero { font-size: 16px; font-weight: bold; color: #1f2937; margin-bottom: 5px; }
@@ -263,7 +294,12 @@
 
               {mostrarGestionPrecios && (
                 <div className="bg-amber-50 rounded-lg p-3 sm:p-4 mb-6 border-2 border-amber-300">
-                  <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4">🔧 Lista de Precios</h2>
+                  <div className="flex justify-between items-center mb-3 sm:mb-4">
+                    <h2 className="text-base sm:text-lg font-bold text-gray-900">🔧 Lista de Precios</h2>
+                    {cargandoDatos && (
+                      <span className="text-xs text-gray-500">Cargando...</span>
+                    )}
+                  </div>
                   <div className="bg-white rounded-lg p-2 sm:p-3 mb-3">
                     <div className="flex gap-2 flex-col sm:flex-row">
                       <input type="text" placeholder="Nombre del trabajo" value={nuevoNombreMO}
@@ -312,13 +348,13 @@
                 </div>
               )}
 
-              <div className="bg-yellow-50 rounded-lg p-4 mb-6 border-2 border-yellow-300">
-                <h2 className="text-lg font-bold text-gray-900 mb-3">📋 Datos del Cliente</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="bg-yellow-50 rounded-lg p-3 sm:p-4 mb-6 border-2 border-yellow-300">
+                <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-3">📋 Datos del Cliente</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                   <input type="text" placeholder="Nombre del cliente" value={datosCliente.nombre}
                     onChange={(e) => setDatosCliente({...datosCliente, nombre: e.target.value})}
                     className="px-3 py-2 border rounded-lg text-sm" />
-                  <input type="text" placeholder="Teléfono" value={datosCliente.telefono}
+                  <input type="tel" placeholder="Teléfono" value={datosCliente.telefono}
                     onChange={(e) => setDatosCliente({...datosCliente, telefono: e.target.value})}
                     className="px-3 py-2 border rounded-lg text-sm" />
                   <input type="email" placeholder="Email" value={datosCliente.email}
@@ -330,14 +366,14 @@
                 </div>
               </div>
 
-              <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                <h2 className="text-lg font-bold text-gray-800 mb-3">➕ Agregar Ítem</h2>
+              <div className="bg-gray-50 rounded-lg p-3 sm:p-4 mb-6">
+                <h2 className="text-base sm:text-lg font-bold text-gray-800 mb-3">➕ Agregar Ítem</h2>
                 <select value={tipo} onChange={(e) => {
                   setTipo(e.target.value);
                   setManoObraSeleccionada('');
                   setDescripcion('');
                   setPrecioUnitario('');
-                }} className="w-full px-3 py-2 border-2 rounded-lg mb-3 font-semibold text-sm border-amber-300">
+                }} className="w-full px-3 py-3 border-2 rounded-lg mb-3 font-semibold text-sm border-amber-300">
                   <option value="material">💡 Material</option>
                   <option value="mano_obra">🔧 Mano de Obra</option>
                 </select>
@@ -354,19 +390,23 @@
                   </select>
                 )}
 
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
+                <div className="space-y-2 mb-3">
                   <input type="text" placeholder="Descripción" value={descripcion}
                     onChange={(e) => setDescripcion(e.target.value)}
-                    className="col-span-2 px-3 py-2 border rounded-lg text-sm" />
-                  <input type="number" placeholder="Cant." value={cantidad}
-                    onChange={(e) => setCantidad(e.target.value)}
-                    className="px-3 py-2 border rounded-lg text-sm" />
-                  <input type="number" placeholder="Precio" value={precioUnitario}
-                    onChange={(e) => setPrecioUnitario(e.target.value)}
-                    className="px-3 py-2 border rounded-lg text-sm" />
+                    className="w-full px-3 py-2 border rounded-lg text-sm" />
+                  <div className="grid grid-cols-2 gap-2">
+                    <input type="number" placeholder="Cantidad" value={cantidad}
+                      onChange={(e) => setCantidad(e.target.value)}
+                      inputMode="decimal"
+                      className="px-3 py-2 border rounded-lg text-sm" />
+                    <input type="number" placeholder="Precio" value={precioUnitario}
+                      onChange={(e) => setPrecioUnitario(e.target.value)}
+                      inputMode="decimal"
+                      className="px-3 py-2 border rounded-lg text-sm" />
+                  </div>
                 </div>
                 <button onClick={agregarItem}
-                  className="w-full bg-gray-800 hover:bg-gray-900 text-white font-semibold py-3 rounded-lg flex items-center justify-center gap-2">
+                  className="w-full bg-gray-800 hover:bg-gray-900 text-white font-semibold py-3 rounded-lg flex items-center justify-center gap-2 active:bg-black">
                   <Plus /> Agregar Ítem
                 </button>
               </div>
@@ -374,37 +414,41 @@
               {items.length > 0 && (
                 <>
                   <div className="bg-white rounded-lg border mb-6 overflow-x-auto">
-                    <table className="w-full text-sm">
+                    <table className="w-full text-xs sm:text-sm">
                       <thead className="bg-gray-800 text-white">
                         <tr>
-                          <th className="px-2 py-2 text-left">Tipo</th>
-                          <th className="px-2 py-2 text-left">Descripción</th>
-                          <th className="px-2 py-2 text-center">Cant.</th>
-                          <th className="px-2 py-2 text-right">P.U.</th>
-                          <th className="px-2 py-2 text-right">Subt.</th>
-                          <th className="px-2 py-2"></th>
+                          <th className="px-1 sm:px-2 py-2 text-left text-xs">Tipo</th>
+                          <th className="px-1 sm:px-2 py-2 text-left text-xs">Descripción</th>
+                          <th className="px-1 sm:px-2 py-2 text-center text-xs">Cant.</th>
+                          <th className="px-1 sm:px-2 py-2 text-right text-xs">P.U.</th>
+                          <th className="px-1 sm:px-2 py-2 text-right text-xs">Subtotal</th>
+                          <th className="px-1 sm:px-2 py-2 text-center text-xs">-</th>
                         </tr>
                       </thead>
                       <tbody>
                         {items.map((item, i) => (
                           <tr key={item.id} className={i % 2 === 0 ? 'bg-gray-50' : ''}>
-                            <td className="px-2 py-2">{item.tipo === 'material' ? '💡' : '🔧'}</td>
-                            <td className="px-2 py-2">{item.descripcion}</td>
-                            <td className="px-2 py-2 text-center">{item.cantidad}</td>
-                            <td className="px-2 py-2 text-right">${item.precioUnitario.toLocaleString('es-AR')}</td>
-                            <td className="px-2 py-2 text-right font-semibold">${(item.cantidad * item.precioUnitario).toLocaleString('es-AR')}</td>
-                            <td className="px-2 py-2"><button onClick={() => eliminarItem(item.id)} className="text-red-600"><Trash2 /></button></td>
+                            <td className="px-1 sm:px-2 py-2 text-base">{item.tipo === 'material' ? '💡' : '🔧'}</td>
+                            <td className="px-1 sm:px-2 py-2 text-xs sm:text-sm">{item.descripcion}</td>
+                            <td className="px-1 sm:px-2 py-2 text-center text-xs sm:text-sm">{item.cantidad}</td>
+                            <td className="px-1 sm:px-2 py-2 text-right text-xs sm:text-sm whitespace-nowrap">${item.precioUnitario.toLocaleString('es-AR')}</td>
+                            <td className="px-1 sm:px-2 py-2 text-right font-semibold text-xs sm:text-sm whitespace-nowrap">${(item.cantidad * item.precioUnitario).toLocaleString('es-AR')}</td>
+                            <td className="px-1 sm:px-2 py-2 text-center">
+                              <button onClick={() => eliminarItem(item.id)} className="text-red-600 active:text-red-800 p-1">
+                                <Trash2 />
+                              </button>
+                            </td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
                   </div>
 
-                  <div className="grid md:grid-cols-2 gap-4 mb-6">
-                    <div className="bg-yellow-50 rounded-lg p-4">
-                      <h3 className="font-bold text-gray-800 mb-3 text-sm">💰 Ajustes</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 mb-6">
+                    <div className="bg-yellow-50 rounded-lg p-3 sm:p-4 border border-yellow-300">
+                      <h3 className="font-bold text-gray-800 mb-3 text-sm sm:text-base">💰 Ajustes</h3>
                       <div className="space-y-3">
-                        <div className="flex items-center gap-2 text-sm">
+                        <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm">
                           <input type="checkbox" id="iva" checked={aplicarIVA}
                             onChange={(e) => setAplicarIVA(e.target.checked)} className="w-4 h-4" />
                           <label htmlFor="iva" className="font-semibold">IVA</label>
@@ -412,12 +456,13 @@
                             <>
                               <input type="number" value={porcentajeIVA}
                                 onChange={(e) => setPorcentajeIVA(parseFloat(e.target.value))}
-                                className="w-16 px-2 py-1 border rounded text-sm" min="0" step="0.5" />
+                                className="w-14 sm:w-16 px-2 py-1 border rounded text-xs sm:text-sm" min="0" step="0.5" 
+                                inputMode="decimal" />
                               <span>%</span>
                             </>
                           )}
                         </div>
-                        <div className="flex items-center gap-2 text-sm">
+                        <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm">
                           <input type="checkbox" id="desc" checked={aplicarDescuento}
                             onChange={(e) => setAplicarDescuento(e.target.checked)} className="w-4 h-4" />
                           <label htmlFor="desc" className="font-semibold">Descuento</label>
@@ -425,7 +470,8 @@
                             <>
                               <input type="number" value={porcentajeDescuento}
                                 onChange={(e) => setPorcentajeDescuento(parseFloat(e.target.value))}
-                                className="w-16 px-2 py-1 border rounded text-sm" min="0" max="100" step="0.5" />
+                                className="w-14 sm:w-16 px-2 py-1 border rounded text-xs sm:text-sm" min="0" max="100" step="0.5"
+                                inputMode="decimal" />
                               <span>%</span>
                             </>
                           )}
@@ -433,8 +479,8 @@
                       </div>
                     </div>
 
-                    <div className="bg-green-50 rounded-lg p-4">
-                      <h3 className="font-bold text-gray-800 mb-3 text-sm">📄 Info Presupuesto</h3>
+                    <div className="bg-green-50 rounded-lg p-3 sm:p-4 border border-green-300">
+                      <h3 className="font-bold text-gray-800 mb-3 text-sm sm:text-base">📄 Info Presupuesto</h3>
                       <div className="space-y-3">
                         <div>
                           <label className="block text-xs font-semibold mb-1">N° Presupuesto</label>
@@ -446,31 +492,32 @@
                           <label className="block text-xs font-semibold mb-1">Validez (días)</label>
                           <input type="number" value={validezDias}
                             onChange={(e) => setValidezDias(parseInt(e.target.value))}
-                            className="w-full px-3 py-2 border rounded-lg text-sm" min="1" />
+                            className="w-full px-3 py-2 border rounded-lg text-sm" min="1" 
+                            inputMode="numeric" />
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  <div className="bg-gradient-to-r from-gray-800 to-gray-900 text-white rounded-lg p-4 mb-6">
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
+                  <div className="bg-gradient-to-r from-gray-800 to-gray-900 text-white rounded-lg p-4 sm:p-6 mb-6">
+                    <div className="space-y-2 sm:space-y-3">
+                      <div className="flex justify-between text-sm sm:text-base">
                         <span>Subtotal:</span>
                         <span className="font-bold">${calcularSubtotal().toLocaleString('es-AR', {minimumFractionDigits: 2})}</span>
                       </div>
                       {aplicarDescuento && (
-                        <div className="flex justify-between text-yellow-300">
+                        <div className="flex justify-between text-yellow-300 text-sm sm:text-base">
                           <span>Descuento ({porcentajeDescuento}%):</span>
                           <span className="font-bold">-${calcularDescuento().toLocaleString('es-AR', {minimumFractionDigits: 2})}</span>
                         </div>
                       )}
                       {aplicarIVA && (
-                        <div className="flex justify-between">
+                        <div className="flex justify-between text-sm sm:text-base">
                           <span>IVA ({porcentajeIVA}%):</span>
                           <span className="font-bold">${calcularIVA().toLocaleString('es-AR', {minimumFractionDigits: 2})}</span>
                         </div>
                       )}
-                      <div className="border-t-2 border-yellow-400 pt-2 flex justify-between text-xl">
+                      <div className="border-t-2 border-yellow-400 pt-2 sm:pt-3 flex justify-between text-lg sm:text-xl">
                         <span className="font-bold">TOTAL:</span>
                         <span className="font-bold text-yellow-400">${calcularTotal().toLocaleString('es-AR', {minimumFractionDigits: 2})}</span>
                       </div>
@@ -478,7 +525,7 @@
                   </div>
 
                   <button onClick={generarPDF}
-                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-lg flex items-center justify-center gap-3 text-lg shadow-lg">
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold py-3 sm:py-4 rounded-lg flex items-center justify-center gap-3 text-base sm:text-lg shadow-lg">
                     <Download /> Generar PDF
                   </button>
                 </>
