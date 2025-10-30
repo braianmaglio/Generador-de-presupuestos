@@ -1,0 +1,783 @@
+import React, { useState } from 'react';
+import { Plus, Trash2, FileText, Download, Edit2, Save, X, Settings } from 'lucide-react';
+
+export default function PresupuestoElectricista() {
+  const [datosNegocio] = useState({
+    nombre: 'Braian Maglio Electricista',
+    email: 'braianmaglio76@gmail.com',
+    telefono: '+543487320738',
+    direccion: ''
+  });
+
+  const [preciosManoObra, setPreciosManoObra] = useState([
+    { id: 1, nombre: 'Cableado residencial', precio: 5000 },
+    { id: 2, nombre: 'Instalación toma corriente', precio: 3000 },
+    { id: 3, nombre: 'Instalación interruptor', precio: 2500 },
+    { id: 4, nombre: 'Instalación luminaria', precio: 3500 },
+    { id: 5, nombre: 'Tablero eléctrico', precio: 15000 },
+    { id: 6, nombre: 'Puesta a tierra', precio: 8000 },
+  ]);
+
+  const [datosCliente, setDatosCliente] = useState({
+    nombre: '',
+    telefono: '',
+    direccion: '',
+    email: ''
+  });
+
+  const [items, setItems] = useState([]);
+  const [descripcion, setDescripcion] = useState('');
+  const [cantidad, setCantidad] = useState(1);
+  const [precioUnitario, setPrecioUnitario] = useState('');
+  const [tipo, setTipo] = useState('material');
+  const [manoObraSeleccionada, setManoObraSeleccionada] = useState('');
+  
+  const [aplicarIVA, setAplicarIVA] = useState(false);
+  const [porcentajeIVA, setPorcentajeIVA] = useState(21);
+  const [aplicarDescuento, setAplicarDescuento] = useState(false);
+  const [porcentajeDescuento, setPorcentajeDescuento] = useState(0);
+  const [numeroPresupuesto, setNumeroPresupuesto] = useState('001');
+  const [validezDias, setValidezDias] = useState(15);
+
+  const [mostrarGestionPrecios, setMostrarGestionPrecios] = useState(false);
+  const [editandoPrecio, setEditandoPrecio] = useState(null);
+  const [nuevoNombreMO, setNuevoNombreMO] = useState('');
+  const [nuevoPrecioMO, setNuevoPrecioMO] = useState('');
+
+  const agregarPrecioManoObra = () => {
+    if (nuevoNombreMO && nuevoPrecioMO > 0) {
+      const nuevo = {
+        id: Date.now(),
+        nombre: nuevoNombreMO,
+        precio: parseFloat(nuevoPrecioMO)
+      };
+      setPreciosManoObra([...preciosManoObra, nuevo]);
+      setNuevoNombreMO('');
+      setNuevoPrecioMO('');
+    }
+  };
+
+  const eliminarPrecioManoObra = (id) => {
+    setPreciosManoObra(preciosManoObra.filter(p => p.id !== id));
+  };
+
+  const actualizarPrecioManoObra = (id, nuevoNombre, nuevoPrecio) => {
+    setPreciosManoObra(preciosManoObra.map(p => 
+      p.id === id ? { ...p, nombre: nuevoNombre, precio: parseFloat(nuevoPrecio) } : p
+    ));
+    setEditandoPrecio(null);
+  };
+
+  const seleccionarManoObra = (e) => {
+    const id = parseInt(e.target.value);
+    setManoObraSeleccionada(id);
+    
+    if (id) {
+      const precio = preciosManoObra.find(p => p.id === id);
+      if (precio) {
+        setDescripcion(precio.nombre);
+        setPrecioUnitario(precio.precio);
+      }
+    } else {
+      setDescripcion('');
+      setPrecioUnitario('');
+    }
+  };
+
+  const agregarItem = () => {
+    if (descripcion && cantidad > 0 && precioUnitario > 0) {
+      const nuevoItem = {
+        id: Date.now(),
+        descripcion,
+        cantidad: parseFloat(cantidad),
+        precioUnitario: parseFloat(precioUnitario),
+        tipo
+      };
+      setItems([...items, nuevoItem]);
+      setDescripcion('');
+      setCantidad(1);
+      setPrecioUnitario('');
+      setManoObraSeleccionada('');
+    }
+  };
+
+  const eliminarItem = (id) => {
+    setItems(items.filter(item => item.id !== id));
+  };
+
+  const calcularSubtotal = () => {
+    return items.reduce((sum, item) => sum + (item.cantidad * item.precioUnitario), 0);
+  };
+
+  const calcularDescuento = () => {
+    if (!aplicarDescuento) return 0;
+    return calcularSubtotal() * (porcentajeDescuento / 100);
+  };
+
+  const calcularIVA = () => {
+    if (!aplicarIVA) return 0;
+    const base = calcularSubtotal() - calcularDescuento();
+    return base * (porcentajeIVA / 100);
+  };
+
+  const calcularTotal = () => {
+    return calcularSubtotal() - calcularDescuento() + calcularIVA();
+  };
+
+  const generarPDF = () => {
+    const ventana = window.open('', '_blank');
+    const fecha = new Date().toLocaleDateString('es-AR');
+    const validezHasta = new Date();
+    validezHasta.setDate(validezHasta.getDate() + validezDias);
+    
+    const materiales = items.filter(item => item.tipo === 'material');
+    const manoDeObra = items.filter(item => item.tipo === 'mano_obra');
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Presupuesto ${numeroPresupuesto}</title>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { 
+            font-family: Arial, sans-serif; 
+            padding: 40px;
+            color: #333;
+          }
+          .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #2563eb;
+          }
+          .logo-section {
+            flex: 1;
+          }
+          .empresa-nombre {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2563eb;
+            margin-bottom: 10px;
+          }
+          .empresa-datos {
+            font-size: 12px;
+            color: #666;
+            line-height: 1.6;
+          }
+          .presupuesto-info {
+            text-align: right;
+          }
+          .presupuesto-numero {
+            font-size: 16px;
+            font-weight: bold;
+            color: #2563eb;
+            margin-bottom: 5px;
+          }
+          .presupuesto-fecha {
+            font-size: 12px;
+            color: #666;
+          }
+          .cliente-section {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+          }
+          .cliente-titulo {
+            font-size: 14px;
+            font-weight: bold;
+            color: #2563eb;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+          }
+          .cliente-datos {
+            font-size: 13px;
+            line-height: 1.8;
+          }
+          .seccion-titulo {
+            font-size: 16px;
+            font-weight: bold;
+            color: #1e40af;
+            margin: 25px 0 15px 0;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e5e7eb;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+          }
+          th {
+            background: #2563eb;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: bold;
+          }
+          td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 13px;
+          }
+          tr:hover {
+            background: #f8fafc;
+          }
+          .text-right { text-align: right; }
+          .text-center { text-align: center; }
+          .totales {
+            margin-top: 30px;
+            margin-left: auto;
+            width: 350px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            overflow: hidden;
+          }
+          .total-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 20px;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 14px;
+          }
+          .total-row:last-child {
+            border-bottom: none;
+          }
+          .total-row.subtotal {
+            background: #f8fafc;
+          }
+          .total-row.descuento {
+            background: #fef3c7;
+            color: #92400e;
+          }
+          .total-row.iva {
+            background: #dbeafe;
+          }
+          .total-row.total {
+            background: #2563eb;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+          }
+          .footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 2px solid #e5e7eb;
+            font-size: 11px;
+            color: #666;
+            text-align: center;
+          }
+          .validez {
+            background: #fef3c7;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 12px;
+            text-align: center;
+            color: #92400e;
+          }
+          @media print {
+            body { padding: 20px; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="logo-section">
+            <div class="empresa-nombre">${datosNegocio.nombre}</div>
+            <div class="empresa-datos">
+              📧 ${datosNegocio.email}<br>
+              📱 ${datosNegocio.telefono}
+              ${datosNegocio.direccion ? `<br>📍 ${datosNegocio.direccion}` : ''}
+            </div>
+          </div>
+          <div class="presupuesto-info">
+            <div class="presupuesto-numero">PRESUPUESTO N° ${numeroPresupuesto}</div>
+            <div class="presupuesto-fecha">Fecha: ${fecha}</div>
+          </div>
+        </div>
+
+        ${datosCliente.nombre ? `
+        <div class="cliente-section">
+          <div class="cliente-titulo">Datos del Cliente</div>
+          <div class="cliente-datos">
+            <strong>Nombre:</strong> ${datosCliente.nombre}<br>
+            ${datosCliente.telefono ? `<strong>Teléfono:</strong> ${datosCliente.telefono}<br>` : ''}
+            ${datosCliente.email ? `<strong>Email:</strong> ${datosCliente.email}<br>` : ''}
+            ${datosCliente.direccion ? `<strong>Dirección:</strong> ${datosCliente.direccion}` : ''}
+          </div>
+        </div>
+        ` : ''}
+
+        ${materiales.length > 0 ? `
+        <div class="seccion-titulo">💡 Materiales</div>
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 50%">Descripción</th>
+              <th class="text-center" style="width: 15%">Cantidad</th>
+              <th class="text-right" style="width: 17.5%">Precio Unit.</th>
+              <th class="text-right" style="width: 17.5%">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${materiales.map(item => `
+              <tr>
+                <td>${item.descripcion}</td>
+                <td class="text-center">${item.cantidad}</td>
+                <td class="text-right">$${item.precioUnitario.toLocaleString('es-AR', {minimumFractionDigits: 2})}</td>
+                <td class="text-right">$${(item.cantidad * item.precioUnitario).toLocaleString('es-AR', {minimumFractionDigits: 2})}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+        ` : ''}
+
+        ${manoDeObra.length > 0 ? `
+        <div class="seccion-titulo">🔧 Mano de Obra</div>
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 50%">Descripción</th>
+              <th class="text-center" style="width: 15%">Cantidad</th>
+              <th class="text-right" style="width: 17.5%">Precio Unit.</th>
+              <th class="text-right" style="width: 17.5%">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${manoDeObra.map(item => `
+              <tr>
+                <td>${item.descripcion}</td>
+                <td class="text-center">${item.cantidad}</td>
+                <td class="text-right">$${item.precioUnitario.toLocaleString('es-AR', {minimumFractionDigits: 2})}</td>
+                <td class="text-right">$${(item.cantidad * item.precioUnitario).toLocaleString('es-AR', {minimumFractionDigits: 2})}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+        ` : ''}
+
+        <div class="totales">
+          <div class="total-row subtotal">
+            <span>Subtotal</span>
+            <strong>$${calcularSubtotal().toLocaleString('es-AR', {minimumFractionDigits: 2})}</strong>
+          </div>
+          ${aplicarDescuento ? `
+          <div class="total-row descuento">
+            <span>Descuento (${porcentajeDescuento}%)</span>
+            <strong>-$${calcularDescuento().toLocaleString('es-AR', {minimumFractionDigits: 2})}</strong>
+          </div>
+          ` : ''}
+          ${aplicarIVA ? `
+          <div class="total-row iva">
+            <span>IVA (${porcentajeIVA}%)</span>
+            <strong>$${calcularIVA().toLocaleString('es-AR', {minimumFractionDigits: 2})}</strong>
+          </div>
+          ` : ''}
+          <div class="total-row total">
+            <span>TOTAL</span>
+            <strong>$${calcularTotal().toLocaleString('es-AR', {minimumFractionDigits: 2})}</strong>
+          </div>
+        </div>
+
+        <div class="validez">
+          ⏰ Presupuesto válido hasta: ${validezHasta.toLocaleDateString('es-AR')} (${validezDias} días)
+        </div>
+
+        <div class="footer">
+          Este presupuesto no constituye una factura oficial<br>
+          Generado el ${fecha} | ${datosNegocio.nombre}
+        </div>
+
+        <script>
+          window.onload = function() {
+            window.print();
+          }
+        </script>
+      </body>
+      </html>
+    `;
+    
+    ventana.document.write(html);
+    ventana.document.close();
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+      <div className="max-w-6xl mx-auto">
+        <div className="bg-white rounded-lg shadow-xl p-6 mb-6">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <FileText className="w-8 h-8 text-blue-600" />
+              <h1 className="text-3xl font-bold text-gray-800">Generador de Presupuestos</h1>
+            </div>
+            <button
+              onClick={() => setMostrarGestionPrecios(!mostrarGestionPrecios)}
+              className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition"
+            >
+              <Settings className="w-5 h-5" />
+              Gestionar Precios
+            </button>
+          </div>
+
+          {mostrarGestionPrecios && (
+            <div className="bg-purple-50 rounded-lg p-6 mb-6 border-2 border-purple-200">
+              <h2 className="text-xl font-bold text-purple-900 mb-4">🔧 Lista de Precios - Mano de Obra</h2>
+              
+              <div className="bg-white rounded-lg p-4 mb-4">
+                <h3 className="font-semibold mb-3">Agregar Nuevo Precio</h3>
+                <div className="flex gap-3">
+                  <input
+                    type="text"
+                    placeholder="Nombre del trabajo (ej: Cableado)"
+                    value={nuevoNombreMO}
+                    onChange={(e) => setNuevoNombreMO(e.target.value)}
+                    className="flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
+                  />
+                  <input
+                    type="number"
+                    placeholder="Precio"
+                    value={nuevoPrecioMO}
+                    onChange={(e) => setNuevoPrecioMO(e.target.value)}
+                    min="0"
+                    className="w-32 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
+                  />
+                  <button
+                    onClick={agregarPrecioManoObra}
+                    className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+                  >
+                    <Plus className="w-5 h-5" />
+                    Agregar
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                {preciosManoObra.map(precio => (
+                  <div key={precio.id} className="bg-white rounded-lg p-3 flex items-center justify-between">
+                    {editandoPrecio === precio.id ? (
+                      <>
+                        <input
+                          type="text"
+                          defaultValue={precio.nombre}
+                          id={`nombre-${precio.id}`}
+                          className="flex-1 px-3 py-1 border rounded mr-2"
+                        />
+                        <input
+                          type="number"
+                          defaultValue={precio.precio}
+                          id={`precio-${precio.id}`}
+                          className="w-32 px-3 py-1 border rounded mr-2"
+                        />
+                        <button
+                          onClick={() => {
+                            const nuevoNombre = document.getElementById(`nombre-${precio.id}`).value;
+                            const nuevoPrecio = document.getElementById(`precio-${precio.id}`).value;
+                            actualizarPrecioManoObra(precio.id, nuevoNombre, nuevoPrecio);
+                          }}
+                          className="text-green-600 hover:text-green-800 mr-2"
+                        >
+                          <Save className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={() => setEditandoPrecio(null)}
+                          className="text-gray-600 hover:text-gray-800"
+                        >
+                          <X className="w-5 h-5" />
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <span className="flex-1 font-medium">{precio.nombre}</span>
+                        <span className="text-lg font-bold text-purple-700 mr-4">
+                          ${precio.precio.toLocaleString('es-AR')}
+                        </span>
+                        <button
+                          onClick={() => setEditandoPrecio(precio.id)}
+                          className="text-blue-600 hover:text-blue-800 mr-2"
+                        >
+                          <Edit2 className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={() => eliminarPrecioManoObra(precio.id)}
+                          className="text-red-600 hover:text-red-800"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      </>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="bg-blue-50 rounded-lg p-6 mb-6">
+            <h2 className="text-xl font-bold text-blue-900 mb-4">📋 Datos del Cliente</h2>
+            <div className="grid md:grid-cols-2 gap-4">
+              <input
+                type="text"
+                placeholder="Nombre del cliente"
+                value={datosCliente.nombre}
+                onChange={(e) => setDatosCliente({...datosCliente, nombre: e.target.value})}
+                className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+              />
+              <input
+                type="text"
+                placeholder="Teléfono"
+                value={datosCliente.telefono}
+                onChange={(e) => setDatosCliente({...datosCliente, telefono: e.target.value})}
+                className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+              />
+              <input
+                type="email"
+                placeholder="Email"
+                value={datosCliente.email}
+                onChange={(e) => setDatosCliente({...datosCliente, email: e.target.value})}
+                className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+              />
+              <input
+                type="text"
+                placeholder="Dirección del trabajo"
+                value={datosCliente.direccion}
+                onChange={(e) => setDatosCliente({...datosCliente, direccion: e.target.value})}
+                className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+              />
+            </div>
+          </div>
+
+          <div className="bg-gray-50 rounded-lg p-6 mb-6">
+            <h2 className="text-xl font-bold text-gray-800 mb-4">➕ Agregar Ítem</h2>
+            
+            <div className="mb-4">
+              <select
+                value={tipo}
+                onChange={(e) => {
+                  setTipo(e.target.value);
+                  setManoObraSeleccionada('');
+                  setDescripcion('');
+                  setPrecioUnitario('');
+                }}
+                className="w-full px-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-semibold"
+              >
+                <option value="material">💡 Material</option>
+                <option value="mano_obra">🔧 Mano de Obra</option>
+              </select>
+            </div>
+
+            {tipo === 'mano_obra' && (
+              <div className="mb-4">
+                <select
+                  value={manoObraSeleccionada}
+                  onChange={seleccionarManoObra}
+                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                >
+                  <option value="">-- Seleccionar de lista o escribir manual --</option>
+                  {preciosManoObra.map(precio => (
+                    <option key={precio.id} value={precio.id}>
+                      {precio.nombre} - ${precio.precio.toLocaleString('es-AR')}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            <div className="grid md:grid-cols-4 gap-4 mb-4">
+              <input
+                type="text"
+                placeholder="Descripción"
+                value={descripcion}
+                onChange={(e) => setDescripcion(e.target.value)}
+                className="md:col-span-2 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+              />
+              <input
+                type="number"
+                placeholder="Cantidad"
+                value={cantidad}
+                onChange={(e) => setCantidad(e.target.value)}
+                min="0"
+                step="0.01"
+                className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+              />
+              <input
+                type="number"
+                placeholder="Precio Unitario"
+                value={precioUnitario}
+                onChange={(e) => setPrecioUnitario(e.target.value)}
+                min="0"
+                step="0.01"
+                className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+              />
+            </div>
+            <button
+              onClick={agregarItem}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg flex items-center justify-center gap-2 transition"
+            >
+              <Plus className="w-5 h-5" />
+              Agregar Ítem
+            </button>
+          </div>
+
+          {items.length > 0 && (
+            <div className="bg-white rounded-lg border mb-6 overflow-hidden">
+              <table className="w-full">
+                <thead className="bg-gray-800 text-white">
+                  <tr>
+                    <th className="px-4 py-3 text-left">Tipo</th>
+                    <th className="px-4 py-3 text-left">Descripción</th>
+                    <th className="px-4 py-3 text-center">Cant.</th>
+                    <th className="px-4 py-3 text-right">P. Unit.</th>
+                    <th className="px-4 py-3 text-right">Subtotal</th>
+                    <th className="px-4 py-3 text-center">Acción</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {items.map((item, index) => (
+                    <tr key={item.id} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
+                      <td className="px-4 py-3">
+                        {item.tipo === 'material' ? '💡 Material' : '🔧 M. Obra'}
+                      </td>
+                      <td className="px-4 py-3">{item.descripcion}</td>
+                      <td className="px-4 py-3 text-center">{item.cantidad}</td>
+                      <td className="px-4 py-3 text-right">${item.precioUnitario.toLocaleString('es-AR')}</td>
+                      <td className="px-4 py-3 text-right font-semibold">
+                        ${(item.cantidad * item.precioUnitario).toLocaleString('es-AR')}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <button
+                          onClick={() => eliminarItem(item.id)}
+                          className="text-red-600 hover:text-red-800 transition"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          <div className="grid md:grid-cols-2 gap-6 mb-6">
+            <div className="bg-yellow-50 rounded-lg p-6">
+              <h3 className="font-bold text-gray-800 mb-4">💰 Ajustes Financieros</h3>
+              
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    id="iva"
+                    checked={aplicarIVA}
+                    onChange={(e) => setAplicarIVA(e.target.checked)}
+                    className="w-5 h-5"
+                  />
+                  <label htmlFor="iva" className="font-semibold">Aplicar IVA</label>
+                  {aplicarIVA && (
+                    <input
+                      type="number"
+                      value={porcentajeIVA}
+                      onChange={(e) => setPorcentajeIVA(parseFloat(e.target.value))}
+                      className="w-20 px-2 py-1 border rounded"
+                      min="0"
+                      step="0.5"
+                    />
+                  )}
+                  {aplicarIVA && <span>%</span>}
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    id="descuento"
+                    checked={aplicarDescuento}
+                    onChange={(e) => setAplicarDescuento(e.target.checked)}
+                    className="w-5 h-5"
+                  />
+                  <label htmlFor="descuento" className="font-semibold">Aplicar Descuento</label>
+                  {aplicarDescuento && (
+                    <input
+                      type="number"
+                      value={porcentajeDescuento}
+                      onChange={(e) => setPorcentajeDescuento(parseFloat(e.target.value))}
+                      className="w-20 px-2 py-1 border rounded"
+                      min="0"
+                      max="100"
+                      step="0.5"
+                    />
+                  )}
+                  {aplicarDescuento && <span>%</span>}
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-green-50 rounded-lg p-6">
+              <h3 className="font-bold text-gray-800 mb-4">📄 Info del Presupuesto</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold mb-1">N° Presupuesto</label>
+                  <input
+                    type="text"
+                    value={numeroPresupuesto}
+                    onChange={(e) => setNumeroPresupuesto(e.target.value)}
+                    className="w-full px-3 py-2 border rounded-lg"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold mb-1">Validez (días)</label>
+                  <input
+                    type="number"
+                    value={validezDias}
+                    onChange={(e) => setValidezDias(parseInt(e.target.value))}
+                    className="w-full px-3 py-2 border rounded-lg"
+                    min="1"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {items.length > 0 && (
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-lg p-6 mb-6">
+              <div className="space-y-3">
+                <div className="flex justify-between text-lg">
+                  <span>Subtotal:</span>
+                  <span className="font-bold">${calcularSubtotal().toLocaleString('es-AR', {minimumFractionDigits: 2})}</span>
+                </div>
+                {aplicarDescuento && (
+                  <div className="flex justify-between text-lg text-yellow-200">
+                    <span>Descuento ({porcentajeDescuento}%):</span>
+                    <span className="font-bold">-${calcularDescuento().toLocaleString('es-AR', {minimumFractionDigits: 2})}</span>
+                  </div>
+                )}
+                {aplicarIVA && (
+                  <div className="flex justify-between text-lg">
+                    <span>IVA ({porcentajeIVA}%):</span>
+                    <span className="font-bold">${calcularIVA().toLocaleString('es-AR', {minimumFractionDigits: 2})}</span>
+                  </div>
+                )}
+                <div className="border-t-2 border-white/30 pt-3 flex justify-between text-2xl">
+                  <span className="font-bold">TOTAL:</span>
+                  <span className="font-bold">${calcularTotal().toLocaleString('es-AR', {minimumFractionDigits: 2})}</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {items.length > 0 && (
+            <button
+              onClick={generarPDF}
+              className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-lg flex items-center justify-center gap-3 transition text-lg shadow-lg"
+            >
+              <Download className="w-6 h-6" />
+              Generar PDF del Presupuesto
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
