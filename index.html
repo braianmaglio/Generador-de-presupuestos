@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Generador de presupuestos para electricista">
-  <meta name="theme-color" content="#2563eb">
+  <meta name="theme-color" content="#ffd43c">
   <title>Presupuestos - Braian Maglio Electricista</title>
   
   <link rel="manifest" href="manifest.json">
@@ -172,31 +172,34 @@
           <style>
             * { margin: 0; padding: 0; box-sizing: border-box; }
             body { font-family: Arial, sans-serif; padding: 40px; color: #333; }
-            .header { display: flex; justify-content: space-between; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 3px solid #2563eb; }
-            .empresa-nombre { font-size: 24px; font-weight: bold; color: #2563eb; margin-bottom: 10px; }
-            .empresa-datos { font-size: 12px; color: #666; line-height: 1.6; }
+            .header { display: flex; justify-content: space-between; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 3px solid #ffd43c; }
+            .logo-section img { max-width: 200px; max-height: 80px; object-fit: contain; }
+            .empresa-datos { font-size: 12px; color: #666; line-height: 1.6; margin-top: 10px; }
             .presupuesto-info { text-align: right; }
-            .presupuesto-numero { font-size: 16px; font-weight: bold; color: #2563eb; margin-bottom: 5px; }
-            .cliente-section { background: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 30px; }
-            .cliente-titulo { font-size: 14px; font-weight: bold; color: #2563eb; margin-bottom: 10px; text-transform: uppercase; }
-            .seccion-titulo { font-size: 16px; font-weight: bold; color: #1e40af; margin: 25px 0 15px 0; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+            .presupuesto-numero { font-size: 16px; font-weight: bold; color: #1f2937; margin-bottom: 5px; }
+            .cliente-section { background: #fffbeb; padding: 20px; border-radius: 8px; margin-bottom: 30px; border: 2px solid #ffd43c; }
+            .cliente-titulo { font-size: 14px; font-weight: bold; color: #1f2937; margin-bottom: 10px; text-transform: uppercase; }
+            .seccion-titulo { font-size: 16px; font-weight: bold; color: #1f2937; margin: 25px 0 15px 0; padding-bottom: 8px; border-bottom: 2px solid #ffd43c; }
             table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-            th { background: #2563eb; color: white; padding: 12px; text-align: left; font-size: 12px; }
+            th { background: #1f2937; color: white; padding: 12px; text-align: left; font-size: 12px; }
             td { padding: 10px 12px; border-bottom: 1px solid #e5e7eb; font-size: 13px; }
             .text-right { text-align: right; }
             .text-center { text-align: center; }
-            .totales { margin-top: 30px; margin-left: auto; width: 350px; border: 2px solid #e5e7eb; border-radius: 8px; overflow: hidden; }
-            .total-row { display: flex; justify-content: space-between; padding: 12px 20px; border-bottom: 1px solid #e5e7eb; }
-            .total-row.subtotal { background: #f8fafc; }
+            .totales { margin-top: 30px; margin-left: auto; width: 350px; border: 2px solid #ffd43c; border-radius: 8px; overflow: hidden; }
+            .total-row { display: flex; justify-content: space-between; padding: 12px 20px; border-bottom: 1px solid #fef3c7; }
+            .total-row.subtotal { background: #fffbeb; }
             .total-row.descuento { background: #fef3c7; color: #92400e; }
             .total-row.iva { background: #dbeafe; }
-            .total-row.total { background: #2563eb; color: white; font-size: 18px; font-weight: bold; }
-            .validez { background: #fef3c7; padding: 15px; border-radius: 8px; margin-top: 20px; text-align: center; color: #92400e; }
-            .footer { margin-top: 50px; padding-top: 20px; border-top: 2px solid #e5e7eb; font-size: 11px; color: #666; text-align: center; }
+            .total-row.total { background: #1f2937; color: #ffd43c; font-size: 18px; font-weight: bold; }
+            .validez { background: #fffbeb; padding: 15px; border-radius: 8px; margin-top: 20px; text-align: center; color: #92400e; border: 2px solid #ffd43c; }
+            .footer { margin-top: 50px; padding-top: 20px; border-top: 2px solid #ffd43c; font-size: 11px; color: #666; text-align: center; }
           </style></head><body>
           <div class="header">
-            <div><div class="empresa-nombre">${datosNegocio.nombre}</div>
-            <div class="empresa-datos">📧 ${datosNegocio.email}<br>📱 ${datosNegocio.telefono}</div></div>
+            <div class="logo-section">
+              <img src="logo.png" alt="${datosNegocio.nombre}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+              <div style="display: none; font-size: 24px; font-weight: bold; color: #1f2937;">${datosNegocio.nombre}</div>
+              <div class="empresa-datos">📧 ${datosNegocio.email}<br>📱 ${datosNegocio.telefono}</div>
+            </div>
             <div class="presupuesto-info"><div class="presupuesto-numero">PRESUPUESTO N° ${numeroPresupuesto}</div>
             <div>Fecha: ${fecha}</div></div>
           </div>
@@ -236,7 +239,7 @@
       };
 
       return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+        <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-amber-100 p-4">
           <div className="max-w-6xl mx-auto">
             <div className="bg-white rounded-lg shadow-xl p-6 mb-6">
               <div className="flex items-center justify-between mb-6">
@@ -245,14 +248,14 @@
                   <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Presupuestos</h1>
                 </div>
                 <button onClick={() => setMostrarGestionPrecios(!mostrarGestionPrecios)}
-                  className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg text-sm">
+                  className="flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white px-3 py-2 rounded-lg text-sm">
                   <Settings /> Precios
                 </button>
               </div>
 
               {mostrarGestionPrecios && (
-                <div className="bg-purple-50 rounded-lg p-4 mb-6 border-2 border-purple-200">
-                  <h2 className="text-lg font-bold text-purple-900 mb-4">🔧 Lista de Precios</h2>
+                <div className="bg-amber-50 rounded-lg p-4 mb-6 border-2 border-amber-300">
+                  <h2 className="text-lg font-bold text-gray-900 mb-4">🔧 Lista de Precios</h2>
                   <div className="bg-white rounded-lg p-3 mb-3">
                     <div className="flex gap-2 flex-col sm:flex-row">
                       <input type="text" placeholder="Nombre del trabajo" value={nuevoNombreMO}
@@ -262,7 +265,7 @@
                         onChange={(e) => setNuevoPrecioMO(e.target.value)}
                         className="w-full sm:w-28 px-3 py-2 border rounded-lg text-sm" />
                       <button onClick={agregarPrecioManoObra}
-                        className="bg-purple-600 text-white px-3 py-2 rounded-lg flex items-center justify-center gap-2">
+                        className="bg-amber-600 text-white px-3 py-2 rounded-lg flex items-center justify-center gap-2">
                         <Plus /> Agregar
                       </button>
                     </div>
@@ -286,7 +289,7 @@
                         ) : (
                           <>
                             <span className="flex-1 font-medium">{precio.nombre}</span>
-                            <span className="font-bold text-purple-700 mr-3">${precio.precio.toLocaleString('es-AR')}</span>
+                            <span className="font-bold text-amber-700 mr-3">${precio.precio.toLocaleString('es-AR')}</span>
                             <button onClick={() => setEditandoPrecio(precio.id)} className="text-blue-600 mr-2"><Edit2 /></button>
                             <button onClick={() => eliminarPrecioManoObra(precio.id)} className="text-red-600"><Trash2 /></button>
                           </>
@@ -297,8 +300,8 @@
                 </div>
               )}
 
-              <div className="bg-blue-50 rounded-lg p-4 mb-6">
-                <h2 className="text-lg font-bold text-blue-900 mb-3">📋 Datos del Cliente</h2>
+              <div className="bg-yellow-50 rounded-lg p-4 mb-6 border-2 border-yellow-300">
+                <h2 className="text-lg font-bold text-gray-900 mb-3">📋 Datos del Cliente</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <input type="text" placeholder="Nombre del cliente" value={datosCliente.nombre}
                     onChange={(e) => setDatosCliente({...datosCliente, nombre: e.target.value})}
@@ -322,7 +325,7 @@
                   setManoObraSeleccionada('');
                   setDescripcion('');
                   setPrecioUnitario('');
-                }} className="w-full px-3 py-2 border-2 rounded-lg mb-3 font-semibold text-sm">
+                }} className="w-full px-3 py-2 border-2 rounded-lg mb-3 font-semibold text-sm border-amber-300">
                   <option value="material">💡 Material</option>
                   <option value="mano_obra">🔧 Mano de Obra</option>
                 </select>
@@ -351,7 +354,7 @@
                     className="px-3 py-2 border rounded-lg text-sm" />
                 </div>
                 <button onClick={agregarItem}
-                  className="w-full bg-blue-600 text-white font-semibold py-3 rounded-lg flex items-center justify-center gap-2">
+                  className="w-full bg-gray-800 hover:bg-gray-900 text-white font-semibold py-3 rounded-lg flex items-center justify-center gap-2">
                   <Plus /> Agregar Ítem
                 </button>
               </div>
@@ -437,14 +440,14 @@
                     </div>
                   </div>
 
-                  <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-lg p-4 mb-6">
+                  <div className="bg-gradient-to-r from-gray-800 to-gray-900 text-white rounded-lg p-4 mb-6">
                     <div className="space-y-2">
                       <div className="flex justify-between">
                         <span>Subtotal:</span>
                         <span className="font-bold">${calcularSubtotal().toLocaleString('es-AR', {minimumFractionDigits: 2})}</span>
                       </div>
                       {aplicarDescuento && (
-                        <div className="flex justify-between text-yellow-200">
+                        <div className="flex justify-between text-yellow-300">
                           <span>Descuento ({porcentajeDescuento}%):</span>
                           <span className="font-bold">-${calcularDescuento().toLocaleString('es-AR', {minimumFractionDigits: 2})}</span>
                         </div>
@@ -455,15 +458,15 @@
                           <span className="font-bold">${calcularIVA().toLocaleString('es-AR', {minimumFractionDigits: 2})}</span>
                         </div>
                       )}
-                      <div className="border-t-2 border-white/30 pt-2 flex justify-between text-xl">
+                      <div className="border-t-2 border-yellow-400 pt-2 flex justify-between text-xl">
                         <span className="font-bold">TOTAL:</span>
-                        <span className="font-bold">${calcularTotal().toLocaleString('es-AR', {minimumFractionDigits: 2})}</span>
+                        <span className="font-bold text-yellow-400">${calcularTotal().toLocaleString('es-AR', {minimumFractionDigits: 2})}</span>
                       </div>
                     </div>
                   </div>
 
                   <button onClick={generarPDF}
-                    className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-lg flex items-center justify-center gap-3 text-lg shadow-lg">
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-lg flex items-center justify-center gap-3 text-lg shadow-lg">
                     <Download /> Generar PDF
                   </button>
                 </>
