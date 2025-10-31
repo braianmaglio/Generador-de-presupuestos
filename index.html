@@ -71,14 +71,32 @@
 
       // Cargar precios guardados al iniciar
       React.useEffect(() => {
-        const cargarPrecios = () => {
+        const cargarPrecios = async () => {
           try {
-            const preciosGuardados = localStorage.getItem('precios-mano-obra');
-            if (preciosGuardados) {
-              setPreciosManoObra(JSON.parse(preciosGuardados));
+            // Intentar cargar desde la nube primero
+            if (window.storage) {
+              const resultado = await window.storage.get('precios-mano-obra-braian');
+              if (resultado && resultado.value) {
+                const preciosGuardados = JSON.parse(resultado.value);
+                setPreciosManoObra(preciosGuardados);
+                setCargandoDatos(false);
+                return;
+              }
+            }
+            
+            // Si no hay en la nube, intentar localStorage
+            const preciosLocal = localStorage.getItem('precios-mano-obra');
+            if (preciosLocal) {
+              const preciosGuardados = JSON.parse(preciosLocal);
+              setPreciosManoObra(preciosGuardados);
+              
+              // Subir a la nube para sincronizar
+              if (window.storage) {
+                await window.storage.set('precios-mano-obra-braian', preciosLocal);
+              }
             }
           } catch (error) {
-            console.log('No hay precios guardados, usando valores por defecto');
+            console.log('Usando precios por defecto:', error);
           } finally {
             setCargandoDatos(false);
           }
@@ -88,13 +106,24 @@
 
       // Guardar precios automáticamente cuando cambien
       React.useEffect(() => {
-        if (!cargandoDatos) {
-          try {
-            localStorage.setItem('precios-mano-obra', JSON.stringify(preciosManoObra));
-          } catch (error) {
-            console.error('Error al guardar precios:', error);
+        const guardarPrecios = async () => {
+          if (!cargandoDatos) {
+            const datosJSON = JSON.stringify(preciosManoObra);
+            
+            try {
+              // Guardar en localStorage (backup local)
+              localStorage.setItem('precios-mano-obra', datosJSON);
+              
+              // Guardar en la nube (sincronización)
+              if (window.storage) {
+                await window.storage.set('precios-mano-obra-braian', datosJSON);
+              }
+            } catch (error) {
+              console.error('Error al guardar:', error);
+            }
           }
-        }
+        };
+        guardarPrecios();
       }, [preciosManoObra, cargandoDatos]);
 
       const [datosCliente, setDatosCliente] = useState({
