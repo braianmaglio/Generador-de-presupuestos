@@ -325,9 +325,14 @@
                 <div className="bg-amber-50 rounded-lg p-3 sm:p-4 mb-6 border-2 border-amber-300">
                   <div className="flex justify-between items-center mb-3 sm:mb-4">
                     <h2 className="text-base sm:text-lg font-bold text-gray-900">🔧 Lista de Precios</h2>
-                    {cargandoDatos && (
-                      <span className="text-xs text-gray-500">Cargando...</span>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {cargandoDatos && (
+                        <span className="text-xs text-amber-600">⏳ Cargando...</span>
+                      )}
+                      {!cargandoDatos && window.storage && (
+                        <span className="text-xs text-green-600">☁️ Sincronizado</span>
+                      )}
+                    </div>
                   </div>
                   <div className="bg-white rounded-lg p-2 sm:p-3 mb-3">
                     <div className="flex gap-2 flex-col sm:flex-row">
