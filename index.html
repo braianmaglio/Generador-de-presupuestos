@@ -72,45 +72,63 @@
 
       const [preciosManoObra, setPreciosManoObra] = useState(preciosIniciales);
       const [cargandoDatos, setCargandoDatos] = useState(true);
-      const [estadoSync, setEstadoSync] = useState('Cargando...');
 
-      // Cargar precios desde Firebase
+      // Cargar precios guardados al iniciar
       React.useEffect(() => {
-        const preciosRef = database.ref('precios-mano-obra');
-        
-        // Escuchar cambios en tiempo real
-        preciosRef.on('value', (snapshot) => {
-          const datos = snapshot.val();
-          if (datos) {
-            setPreciosManoObra(datos);
-            setEstadoSync('Sincronizado');
-          } else {
-            // Si no hay datos, usar valores por defecto y guardarlos
-            preciosRef.set(preciosIniciales);
-            setEstadoSync('Sincronizado');
+        const cargarPrecios = async () => {
+          try {
+            // Intentar cargar desde la nube primero
+            if (window.storage) {
+              const resultado = await window.storage.get('precios-mano-obra-braian');
+              if (resultado && resultado.value) {
+                const preciosGuardados = JSON.parse(resultado.value);
+                setPreciosManoObra(preciosGuardados);
+                setCargandoDatos(false);
+                return;
+              }
+            }
+            
+            // Si no hay en la nube, intentar localStorage
+            const preciosLocal = localStorage.getItem('precios-mano-obra');
+            if (preciosLocal) {
+              const preciosGuardados = JSON.parse(preciosLocal);
+              setPreciosManoObra(preciosGuardados);
+              
+              // Subir a la nube para sincronizar
+              if (window.storage) {
+                await window.storage.set('precios-mano-obra-braian', preciosLocal);
+              }
+            }
+          } catch (error) {
+            console.log('Usando precios por defecto:', error);
+          } finally {
+            setCargandoDatos(false);
           }
-          setCargandoDatos(false);
-        }, (error) => {
-          console.error('Error al cargar datos:', error);
-          setEstadoSync('Error');
-          setCargandoDatos(false);
-        });
-
-        // Cleanup
-        return () => preciosRef.off('value');
+        };
+        cargarPrecios();
       }, []);
 
-      // Guardar precios en Firebase
-      const guardarEnFirebase = async (nuevosPrecios) => {
-        try {
-          setEstadoSync('Guardando...');
-          await database.ref('precios-mano-obra').set(nuevosPrecios);
-          setEstadoSync('Sincronizado');
-        } catch (error) {
-          console.error('Error al guardar:', error);
-          setEstadoSync('Error al guardar');
-        }
-      };
+      // Guardar precios automáticamente cuando cambien
+      React.useEffect(() => {
+        const guardarPrecios = async () => {
+          if (!cargandoDatos) {
+            const datosJSON = JSON.stringify(preciosManoObra);
+            
+            try {
+              // Guardar en localStorage (backup local)
+              localStorage.setItem('precios-mano-obra', datosJSON);
+              
+              // Guardar en la nube (sincronización)
+              if (window.storage) {
+                await window.storage.set('precios-mano-obra-braian', datosJSON);
+              }
+            } catch (error) {
+              console.error('Error al guardar:', error);
+            }
+          }
+        };
+        guardarPrecios();
+      }, [preciosManoObra, cargandoDatos]);
 
       const [datosCliente, setDatosCliente] = useState({
         nombre: '', telefono: '', direccion: '', email: ''
@@ -137,30 +155,24 @@
 
       const agregarPrecioManoObra = () => {
         if (nuevoNombreMO && nuevoPrecioMO > 0) {
-          const nuevosPrecios = [...preciosManoObra, {
+          setPreciosManoObra([...preciosManoObra, {
             id: Date.now(),
             nombre: nuevoNombreMO,
             precio: parseFloat(nuevoPrecioMO)
-          }];
-          setPreciosManoObra(nuevosPrecios);
-          guardarEnFirebase(nuevosPrecios);
+          }]);
           setNuevoNombreMO('');
           setNuevoPrecioMO('');
         }
       };
 
       const eliminarPrecioManoObra = (id) => {
-        const nuevosPrecios = preciosManoObra.filter(p => p.id !== id);
-        setPreciosManoObra(nuevosPrecios);
-        guardarEnFirebase(nuevosPrecios);
+        setPreciosManoObra(preciosManoObra.filter(p => p.id !== id));
       };
 
       const actualizarPrecioManoObra = (id, nuevoNombre, nuevoPrecio) => {
-        const nuevosPrecios = preciosManoObra.map(p => 
+        setPreciosManoObra(preciosManoObra.map(p => 
           p.id === id ? { ...p, nombre: nuevoNombre, precio: parseFloat(nuevoPrecio) } : p
-        );
-        setPreciosManoObra(nuevosPrecios);
-        guardarEnFirebase(nuevosPrecios);
+        ));
         setEditandoPrecio(null);
       };
 
@@ -318,17 +330,11 @@
                   <div className="flex justify-between items-center mb-3 sm:mb-4">
                     <h2 className="text-base sm:text-lg font-bold text-gray-900">🔧 Lista de Precios</h2>
                     <div className="flex items-center gap-2">
-                      {estadoSync === 'Cargando...' && (
+                      {cargandoDatos && (
                         <span className="text-xs text-amber-600">⏳ Cargando...</span>
                       )}
-                      {estadoSync === 'Guardando...' && (
-                        <span className="text-xs text-blue-600">💾 Guardando...</span>
-                      )}
-                      {estadoSync === 'Sincronizado' && (
+                      {!cargandoDatos && window.storage && (
                         <span className="text-xs text-green-600">☁️ Sincronizado</span>
-                      )}
-                      {estadoSync === 'Error' && (
-                        <span className="text-xs text-red-600">❌ Error</span>
                       )}
                     </div>
                   </div>
@@ -578,3 +584,4 @@
   </script>
 </body>
 </html>
+
