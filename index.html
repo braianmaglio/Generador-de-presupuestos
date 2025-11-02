@@ -22,6 +22,36 @@
   <script src="https://cdn.tailwindcss.com"></script>
   
   <!-- Firebase -->
+  // 1. Importa las funciones necesarias de Firebase
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+import { getDatabase } from 'firebase/database'; // Importa getDatabase para Realtime Database
+
+// 2. Tu configuración de Firebase (asegúrate de que sea la correcta de tu proyecto)
+const firebaseConfig = {
+  apiKey: "AIzaSyAzQDlTwkoDXFLxYlL5WCWQvcqbaoBP3dI",
+  authDomain: "generador-de-presupuesto-26220.firebaseapp.com",
+  databaseURL: "https://generador-de-presupuesto-26220-default-rtdb.firebaseio.com",
+  projectId: "generador-de-presupuesto-26220",
+  storageBucket: "generador-de-presupuesto-26220.firebasestorage.app",
+  messagingSenderId: "13218463805",
+  appId: "1:13218463805:web:9999bb32eac973dd466a54",
+  measurementId: "G-74DFEX6DER"
+};
+// 3. Inicializa la aplicación Firebase
+const app = initializeApp(firebaseConfig);
+
+// 4. Obtén la instancia de Realtime Database
+const database = getDatabase(app); // ¡Aquí se define la variable 'database'!
+
+// Ahora puedes usar la variable 'database' para interactuar con tu Realtime Database
+// Por ejemplo:
+// import { ref, onValue } from 'firebase/database';
+// const starCountRef = ref(database, 'precios-mano-obra');
+// onValue(starCountRef, (snapshot) => {
+//   const data = snapshot.val();
+//   console.log(data);
+// });
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
   
@@ -578,3 +608,4 @@
   </script>
 </body>
 </html>
+
