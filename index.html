@@ -22,34 +22,29 @@
   <script src="https://cdn.tailwindcss.com"></script>
   
   <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
-  <script type="module">
-  // Import the functions you need from the SDKs you need
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-analytics.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 
-    // 1. Objeto de Configuración de TU Proyecto
-    const firebaseConfig = {
-      apiKey: "AIzaSyAzQDlTwkoDXFLxYlL5WCWQvcqbaoBP3dI",
-      authDomain: "generador-de-presupuesto-26220.firebaseapp.com",
-      databaseURL: "https://generador-de-presupuesto-26220-default-rtdb.firebaseio.com",
-      projectId: "generador-de-presupuesto-26220",
-      storageBucket: "generador-de-presupuesto-26220.firebasestorage.app",
-      messagingSenderId: "13218463805",
-      appId: "1:13218463805:web:9999bb32eac973dd466a54",
-      measurementId: "G-74DFEX6DER"
-    };
+<script>
+  // Objeto de Configuración de TU Proyecto
+  const firebaseConfig = {
+    apiKey: "AIzaSyAzQDlTwkoDXFLxYlL5WCWQvcqbaoBP3dI",
+    authDomain: "generador-de-presupuesto-26220.firebaseapp.com",
+    databaseURL: "https://generador-de-presupuesto-26220-default-rtdb.firebaseio.com",
+    projectId: "generador-de-presupuesto-26220",
+    storageBucket: "generador-de-presupuesto-26220.firebasestorage.app",
+    messagingSenderId: "13218463805",
+    appId: "1:13218463805:web:9999bb32eac973dd466a54",
+    measurementId: "G-74DFEX6DER" // Opcional si no usas Analytics
+  };
 
-    // 2. Inicializa la aplicación Firebase (Versión compatible)
-    const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
+  // 1. Inicializa la aplicación usando el método compatible
+  const app = firebase.initializeApp(firebaseConfig);
 
-    // 3. Obtén la instancia de Realtime Database (¡Define la variable 'database' globalmente!)
-    const database = app.database();
-  </script>
+  // 2. Define la variable global 'database' (que tu código de React necesita)
+  // Al usar la versión compatible, app.database() SÍ es una función.
+  const database = app.database();
+</script>
   
   <style>
     body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
@@ -604,6 +599,7 @@
   </script>
 </body>
 </html>
+
 
 
 
